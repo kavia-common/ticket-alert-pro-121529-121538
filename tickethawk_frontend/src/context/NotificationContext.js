@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext();
+
+// Mock notifications for demo purposes (no backend connection)
+const DEMO_MODE = true;
 
 // PUBLIC_INTERFACE
 export const useNotifications = () => {
@@ -16,77 +18,72 @@ export const useNotifications = () => {
 // PUBLIC_INTERFACE
 export const NotificationProvider = ({ children }) => {
   const { user } = useAuth();
-  const [socket, setSocket] = useState(null);
+  const [socket] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [connected, setConnected] = useState(false);
 
-  // Initialize WebSocket connection when user is authenticated
+  // Initialize mock notifications or WebSocket connection when user is authenticated
   useEffect(() => {
-    if (user && !socket) {
-      const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'ws://localhost:8000';
-      
-      const newSocket = io(SOCKET_URL, {
-        auth: {
-          token: localStorage.getItem('tickethawk_token')
-        },
-        transports: ['websocket']
-      });
-
-      newSocket.on('connect', () => {
-        console.log('Connected to notification server');
-        setConnected(true);
-      });
-
-      newSocket.on('disconnect', () => {
-        console.log('Disconnected from notification server');
-        setConnected(false);
-      });
-
-      newSocket.on('notification', (notification) => {
-        addNotification(notification);
-      });
-
-      newSocket.on('price_alert', (alert) => {
-        addNotification({
-          id: Date.now(),
-          type: 'price_alert',
-          title: 'Price Drop Alert!',
-          message: `${alert.event_name} tickets dropped to $${alert.new_price}`,
-          data: alert,
-          timestamp: new Date().toISOString(),
-          read: false
-        });
-      });
-
-      newSocket.on('event_available', (event) => {
-        addNotification({
-          id: Date.now(),
-          type: 'event_available',
-          title: 'New Event Available!',
-          message: `${event.name} tickets are now available`,
-          data: event,
-          timestamp: new Date().toISOString(),
-          read: false
-        });
-      });
-
-      setSocket(newSocket);
-
-      return () => {
-        newSocket.disconnect();
-      };
-    }
-  }, [user, socket]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (socket) {
-        socket.disconnect();
+    if (user) {
+      if (DEMO_MODE) {
+        // Load mock notifications for demo
+        const mockNotifications = [
+          {
+            id: 1,
+            type: 'price_alert',
+            title: 'Price Drop Alert!',
+            message: 'Taylor Swift - Eras Tour tickets dropped to $125 (was $150)',
+            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+            read: false
+          },
+          {
+            id: 2,
+            type: 'event_available',
+            title: 'New Event Available!',
+            message: 'Coldplay World Tour tickets are now available at Hollywood Bowl',
+            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+            read: false
+          },
+          {
+            id: 3,
+            type: 'price_alert',
+            title: 'Price Drop Alert!',
+            message: 'NBA Finals Game 4 tickets dropped to $180 (was $200)',
+            timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+            read: true
+          }
+        ];
+        
+        setNotifications(mockNotifications);
+        setUnreadCount(mockNotifications.filter(n => !n.read).length);
+        setConnected(true); // Simulate connection for demo
+        
+        // Simulate receiving a new notification after login
+        setTimeout(() => {
+          addNotification({
+            id: Date.now(),
+            type: 'price_alert',
+            title: 'Welcome to TicketHawk!',
+            message: 'Your demo account is ready. Try creating some alerts!',
+            timestamp: new Date().toISOString(),
+            read: false
+          });
+        }, 3000);
+        
+      } else {
+        // Real WebSocket connection would go here
+        // const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'ws://localhost:8000';
+        
+        // This would be the real WebSocket implementation
+        // const newSocket = io(SOCKET_URL, {
+        //   auth: { token: localStorage.getItem('tickethawk_user') },
+        //   transports: ['websocket']
+        // });
+        // ... WebSocket event handlers ...
       }
-    };
-  }, [socket]);
+    }
+  }, [user]);
 
   // PUBLIC_INTERFACE
   const addNotification = (notification) => {

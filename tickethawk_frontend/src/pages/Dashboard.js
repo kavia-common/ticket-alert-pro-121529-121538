@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import axios from 'axios';
 import './Dashboard.css';
 
 // PUBLIC_INTERFACE
@@ -25,13 +24,55 @@ const Dashboard = () => {
   // PUBLIC_INTERFACE
   const fetchDashboardData = async () => {
     try {
-      const [statsResponse, alertsResponse] = await Promise.all([
-        axios.get('/api/dashboard/stats'),
-        axios.get('/api/alerts/recent?limit=5')
-      ]);
+      // Simulate API delay for realistic experience
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      setStats(statsResponse.data);
-      setRecentAlerts(alertsResponse.data);
+      // Mock data for demo purposes (no backend connection)
+      const mockStats = {
+        activeAlerts: 3,
+        eventsTracked: 12,
+        priceDropsToday: 2,
+        savings: 245
+      };
+      
+      const mockRecentAlerts = [
+        {
+          id: 1,
+          eventName: 'Taylor Swift - Eras Tour',
+          targetPrice: 150,
+          status: 'active',
+          venue: 'Madison Square Garden',
+          date: '2024-03-15'
+        },
+        {
+          id: 2,
+          eventName: 'NBA Finals Game 4',
+          targetPrice: 200,
+          status: 'triggered',
+          venue: 'Chase Center',
+          date: '2024-06-14'
+        },
+        {
+          id: 3,
+          eventName: 'Coldplay World Tour',
+          targetPrice: 120,
+          status: 'active',
+          venue: 'Hollywood Bowl',
+          date: '2024-05-22'
+        }
+      ];
+      
+      setStats(mockStats);
+      setRecentAlerts(mockRecentAlerts);
+      
+      // This would be the real API call if backend was connected
+      // const [statsResponse, alertsResponse] = await Promise.all([
+      //   axios.get('/api/dashboard/stats'),
+      //   axios.get('/api/alerts/recent?limit=5')
+      // ]);
+      // setStats(statsResponse.data);
+      // setRecentAlerts(alertsResponse.data);
+      
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
